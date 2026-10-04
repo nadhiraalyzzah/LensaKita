@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f9f6f2">
+  <title>LensaKita | Rental Kamera</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
+  <script src="https://unpkg.com/@supabase/supabase-js@2" defer></script>
+  <script src="../back-end/app.js" defer></script>
+  <script src="script.js" defer></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="#dashboard" aria-label="LensaKita dashboard">
+      <span class="brand-mark"><i data-lucide="aperture"></i></span>
+      <span class="brand-name">lensa<span>kita</span><small>CAMERA RENTAL</small></span>
+    </a>
+    <p class="nav-caption">MENU UTAMA</p>
+    <nav class="side-nav" aria-label="Navigasi utama">
+      <button class="nav-link active" data-page="dashboard" aria-label="Dashboard" title="Dashboard"><i data-lucide="layout-dashboard"></i><span>Dashboard</span></button>
+      <button class="nav-link" data-page="pelanggan" aria-label="Pelanggan" title="Pelanggan"><i data-lucide="users-round"></i><span>Pelanggan</span></button>
+      <button class="nav-link" data-page="kamera" aria-label="Persediaan Kamera" title="Persediaan Kamera"><i data-lucide="camera"></i><span>Persediaan Kamera</span></button>
+      <button class="nav-link" data-page="sewa" aria-label="Sewa Kamera" title="Sewa Kamera"><i data-lucide="calendar-plus"></i><span>Sewa Kamera</span></button>
+      <button class="nav-link" data-page="pengembalian" aria-label="Pengembalian" title="Pengembalian"><i data-lucide="package-check"></i><span>Pengembalian</span></button>
+      <button class="nav-link" data-page="pendapatan" aria-label="Pendapatan" title="Pendapatan"><i data-lucide="chart-no-axes-combined"></i><span>Pendapatan</span></button>
+    </nav>
+    <div class="sidebar-bottom">
+      <span class="avatar">LK</span>
+      <span class="profile-name">LensaKita<small>Administrator</small></span>
+      <i data-lucide="chevrons-up-down" class="profile-chevron"></i>
+    </div>
+  </aside>
+
+  <main class="workspace">
+    <header class="topbar">
+      <div class="breadcrumb"><span>Workspace</span><i data-lucide="chevron-right"></i><strong id="pageBreadcrumb">Dashboard</strong></div>
+      <div class="topbar-actions">
+        <span class="connection-pill" id="connectionState"><span class="connection-dot"></span><span id="connectionText">Memeriksa koneksi</span></span>
+        <button class="icon-button" id="refreshButton" aria-label="Muat ulang data" title="Muat ulang data"><i data-lucide="refresh-cw"></i></button>
+        <span class="topbar-avatar">A</span>
+      </div>
+    </header>
+
+    <div class="content-wrap">
+      <section class="page-view active" id="page-dashboard" data-title="Dashboard">
+        <div class="page-heading"><div><p class="eyebrow">RINGKASAN BISNIS</p><h1>Dashboard</h1><p class="page-subtitle">Pantau operasional rental kamera hari ini.</p></div><button class="button button-primary" data-go="sewa"><i data-lucide="plus"></i>Sewa kamera</button></div>
+        <div class="stats-grid" id="dashboardStats"></div>
+        <div class="dashboard-grid">
+          <article class="panel revenue-panel"><div class="panel-heading"><div><h2>Ringkasan pendapatan</h2><p class="muted">Pendapatan selesai per bulan</p></div><span class="period-tag" id="chartYear"></span></div><div class="chart" id="revenueChart" aria-label="Grafik pendapatan bulanan"></div></article>
+          <article class="panel rented-panel"><div class="panel-heading"><div><h2>Kamera sedang disewa</h2><p class="muted">Perlu dikembalikan</p></div><button class="text-button" data-go="pengembalian">Lihat semua <i data-lucide="arrow-up-right"></i></button></div><div id="rentedCameras" class="compact-list"></div></article>
+        </div>
+        <article class="panel table-panel"><div class="panel-heading"><div><h2>Transaksi terbaru</h2><p class="muted">Aktivitas rental terakhir</p></div><button class="text-button" data-go="pendapatan">Lihat transaksi <i data-lucide="arrow-up-right"></i></button></div><div class="table-scroll"><table><thead><tr><th>ID TRANSAKSI</th><th>PELANGGAN</th><th>KAMERA</th><th>TANGGAL SEWA</th><th>TOTAL</th><th>STATUS</th></tr></thead><tbody id="recentTransactions"></tbody></table></div></article>
+      </section>
+
+      <section class="page-view" id="page-pelanggan" data-title="Pelanggan">
+        <div class="page-heading"><div><p class="eyebrow">DATA PELANGGAN</p><h1>Pelanggan</h1><p class="page-subtitle">Kelola informasi pelanggan rental.</p></div><button class="button button-primary" id="addCustomer"><i data-lucide="plus"></i>Tambah pelanggan</button></div>
+        <article class="panel table-panel"><div class="toolbar"><div class="search-box"><i data-lucide="search"></i><input id="customerSearch" type="search" placeholder="Cari nama, telepon, atau alamat..."></div><span class="result-count" id="customerCount"></span></div><div class="table-scroll"><table><thead><tr><th>PELANGGAN</th><th>NO. TELEPON</th><th>ALAMAT</th><th>TRANSAKSI</th><th>AKSI</th></tr></thead><tbody id="customersTable"></tbody></table></div></article>
+      </section>
+
+      <section class="page-view" id="page-kamera" data-title="Persediaan Kamera">
+        <div class="page-heading"><div><p class="eyebrow">INVENTARIS</p><h1>Persediaan kamera</h1><p class="page-subtitle">Atur koleksi kamera dan harga sewa.</p></div><button class="button button-primary" id="addCamera"><i data-lucide="plus"></i>Tambah kamera</button></div>
+        <article class="panel table-panel"><div class="toolbar"><div class="search-box"><i data-lucide="search"></i><input id="cameraSearch" type="search" placeholder="Cari nama atau merk kamera..."></div><select class="select-control" id="cameraStatusFilter" aria-label="Filter status kamera"><option value="">Semua status</option><option>Tersedia</option><option>Disewa</option></select><span class="result-count" id="cameraCount"></span></div><div class="table-scroll"><table><thead><tr><th>KAMERA</th><th>MERK</th><th>JENIS</th><th>HARGA / HARI</th><th>STATUS</th><th>AKSI</th></tr></thead><tbody id="camerasTable"></tbody></table></div></article>
+      </section>
+
+      <section class="page-view" id="page-sewa" data-title="Sewa Kamera">
+        <div class="page-heading"><div><p class="eyebrow">TRANSAKSI BARU</p><h1>Sewa kamera</h1><p class="page-subtitle">Buat transaksi sewa untuk pelanggan.</p></div></div>
+        <div class="rental-layout"><article class="panel form-panel"><div class="panel-heading"><div><h2>Detail penyewaan</h2><p class="muted">Lengkapi informasi kamera dan periode sewa.</p></div><span class="step-indicator">01 <span>/ 01</span></span></div><form id="rentalForm" class="form-grid">
+          <label class="field full-field">Pelanggan<select id="rentalCustomer" required><option value="">Pilih pelanggan</option></select></label>
+          <label class="field full-field">Kamera<select id="rentalCamera" required><option value="">Pilih kamera tersedia</option></select></label>
+          <label class="field">Tanggal sewa<input id="rentalStart" type="date" required></label>
+          <label class="field">Tanggal kembali<input id="rentalEnd" type="date" required></label>
+          <div class="rental-summary full-field"><div><span>Lama sewa</span><strong id="rentalDays">0 hari</strong></div><div><span>Harga per hari</span><strong id="rentalRate">Rp0</strong></div><div class="summary-total"><span>Total pendapatan</span><strong id="rentalTotal">Rp0</strong></div></div>
+          <button class="button button-primary full-field" type="submit"><i data-lucide="receipt-text"></i>Buat transaksi sewa</button>
+        </form></article><aside class="rental-note"><span class="note-icon"><i data-lucide="badge-info"></i></span><h2>Informasi sewa</h2><p>Pastikan tanggal kembali setelah tanggal sewa. Harga dihitung otomatis berdasarkan lama sewa dan tarif harian kamera.</p><div class="note-rule"></div><div class="note-detail"><i data-lucide="shield-check"></i><span>Status kamera berubah menjadi <strong>Disewa</strong> setelah transaksi berhasil.</span></div></aside></div>
+      </section>
+
+      <section class="page-view" id="page-pengembalian" data-title="Pengembalian">
+        <div class="page-heading"><div><p class="eyebrow">SEWA BERLANGSUNG</p><h1>Pengembalian</h1><p class="page-subtitle">Kelola kamera yang masih berada di pelanggan.</p></div><span class="count-chip" id="activeRentalCount">0 aktif</span></div>
+        <article class="panel table-panel"><div class="panel-heading"><div><h2>Transaksi aktif</h2><p class="muted">Konfirmasi setelah kamera diterima kembali.</p></div></div><div class="table-scroll"><table><thead><tr><th>PELANGGAN</th><th>KAMERA</th><th>TANGGAL SEWA</th><th>RENCANA KEMBALI</th><th>LAMA SEWA</th><th>TOTAL</th><th>AKSI</th></tr></thead><tbody id="returnsTable"></tbody></table></div></article>
+      </section>
+
+      <section class="page-view" id="page-pendapatan" data-title="Pendapatan">
+        <div class="page-heading"><div><p class="eyebrow">LAPORAN KEUANGAN</p><h1>Pendapatan</h1><p class="page-subtitle">Tinjau nilai transaksi dan status pembayaran sewa.</p></div></div>
+        <div class="income-overview"><article class="income-highlight"><span class="income-icon"><i data-lucide="wallet"></i></span><div><span>Total pendapatan selesai</span><strong id="incomeTotal">Rp0</strong><small id="incomeSubtext">0 transaksi selesai</small></div><i data-lucide="chart-no-axes-combined" class="income-decoration"></i></article><div class="income-mini" id="incomeMiniStats"></div></div>
+        <article class="panel table-panel"><div class="toolbar"><div><h2>Riwayat transaksi</h2><p class="muted">Rincian pendapatan berdasarkan transaksi.</p></div><select class="select-control" id="incomeStatusFilter" aria-label="Filter status transaksi"><option value="">Semua status</option><option>Aktif</option><option>Selesai</option><option>Batal</option></select></div><div class="table-scroll"><table><thead><tr><th>ID TRANSAKSI</th><th>PELANGGAN</th><th>KAMERA</th><th>PERIODE</th><th>LAMA SEWA</th><th>TOTAL</th><th>STATUS</th></tr></thead><tbody id="incomeTable"></tbody></table></div></article>
+      </section>
+    </div>
+  </main>
+
+  <dialog class="app-dialog" id="appDialog"><div class="dialog-content"><div class="dialog-heading"><div><p class="eyebrow" id="dialogEyebrow">DATA</p><h2 id="dialogTitle"></h2></div><button class="icon-button" type="button" id="closeDialog" aria-label="Tutup"><i data-lucide="x"></i></button></div><form id="dialogForm" class="form-grid"></form></div></dialog>
+  <div class="toast-region" id="toastRegion" aria-live="polite"></div>
+</body>
+</html>
