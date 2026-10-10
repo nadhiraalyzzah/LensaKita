@@ -11,7 +11,7 @@
   <link rel="stylesheet" href="style.css">
   <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js" defer></script>
   <script src="https://unpkg.com/@supabase/supabase-js@2" defer></script>
-  <script src="back-end/app.js" defer></script>
+  <script src="../back-end/app.js" defer></script>
   <script src="script.js" defer></script>
 </head>
 <body>
@@ -26,8 +26,19 @@
       <button class="nav-link" data-page="pelanggan" aria-label="Pelanggan" title="Pelanggan"><i data-lucide="users-round"></i><span>Pelanggan</span></button>
       <button class="nav-link" data-page="kamera" aria-label="Persediaan Kamera" title="Persediaan Kamera"><i data-lucide="camera"></i><span>Persediaan Kamera</span></button>
       <button class="nav-link" data-page="sewa" aria-label="Sewa Kamera" title="Sewa Kamera"><i data-lucide="calendar-plus"></i><span>Sewa Kamera</span></button>
-      <button class="nav-link" data-page="pengembalian" aria-label="Pengembalian" title="Pengembalian"><i data-lucide="package-check"></i><span>Pengembalian</span></button>
-      <button class="nav-link" data-page="pendapatan" aria-label="Pendapatan" title="Pendapatan"><i data-lucide="chart-no-axes-combined"></i><span>Pendapatan</span></button>
+      <button class="nav-link" data-page="pengembalian" aria-label="Pengembalian" title="Pengembalian">
+        <i data-lucide="package-check"></i>
+        <span>Pengembalian</span>
+      </button>
+      <button class="nav-link" data-page="pembayaran" aria-label="Pembayaran" title="Pembayaran">
+        <i data-lucide="credit-card"></i>
+        <span>Pembayaran</span>
+      </button>
+
+      <button class="nav-link" data-page="pendapatan" aria-label="Pendapatan" title="Pendapatan">
+        <i data-lucide="chart-no-axes-combined"></i>
+        <span>Pendapatan</span>
+      </button>
     </nav>
     <div class="sidebar-bottom">
       <span class="avatar">LK</span>
@@ -83,6 +94,140 @@
         <div class="page-heading"><div><p class="eyebrow">SEWA BERLANGSUNG</p><h1>Pengembalian</h1><p class="page-subtitle">Kelola kamera yang masih berada di pelanggan.</p></div><span class="count-chip" id="activeRentalCount">0 aktif</span></div>
         <article class="panel table-panel"><div class="panel-heading"><div><h2>Transaksi aktif</h2><p class="muted">Konfirmasi setelah kamera diterima kembali.</p></div></div><div class="table-scroll"><table><thead><tr><th>PELANGGAN</th><th>KAMERA</th><th>TANGGAL SEWA</th><th>RENCANA KEMBALI</th><th>LAMA SEWA</th><th>TOTAL</th><th>AKSI</th></tr></thead><tbody id="returnsTable"></tbody></table></div></article>
       </section>
+ 
+      <section class="page-view" id="page-pembayaran" data-title="Pembayaran">
+        <div class="page-heading">
+          <div>
+           <p class="eyebrow">TRANSAKSI PEMBAYARAN</p>
+           <h1>Pembayaran</h1>
+           <p class="page-subtitle">
+             Kelola pembayaran DP dan pelunasan sewa kamera.
+           </p>
+        </div>
+       </div>
+
+        <div class="rental-layout">
+        <article class="panel form-panel">
+          <div class="panel-heading">
+          <div>
+           <h2>Catat pembayaran</h2>
+           <p class="muted">Masukkan informasi pembayaran pelanggan.</p>
+        </div>
+       </div>
+
+      <form id="paymentForm" class="form-grid">
+        <label class="field full-field">
+          Transaksi sewa
+          <select id="paymentTransaction" required>
+            <option value="">Pilih transaksi</option>
+          </select>
+        </label>
+
+        <div class="rental-summary full-field">
+          <div>
+            <span>Total sewa</span>
+            <strong id="paymentRentalTotal">Rp0</strong>
+          </div>
+          <div>
+            <span>Sudah dibayar</span>
+            <strong id="paymentAlreadyPaid">Rp0</strong>
+          </div>
+          <div class="summary-total">
+            <span>Sisa tagihan</span>
+            <strong id="paymentRemaining">Rp0</strong>
+          </div>
+        </div>
+
+        <label class="field">
+          Jumlah pembayaran
+          <input
+            id="paymentAmount"
+            type="number"
+            min="1"
+            step="1"
+            required
+            placeholder="Contoh: 300000"
+          >
+        </label>
+
+        <label class="field">
+          Metode pembayaran
+          <select id="paymentMethod" required>
+            <option value="">Pilih metode</option>
+            <option value="Tunai">Tunai</option>
+            <option value="Transfer Bank">Transfer Bank</option>
+            <option value="QRIS">QRIS</option>
+          </select>
+        </label>
+
+        <label class="field full-field">
+          Tanggal pembayaran
+          <input id="paymentDate" type="date" required>
+        </label>
+
+        <label class="field full-field">
+          Keterangan
+          <textarea
+            id="paymentNotes"
+            rows="3"
+            maxlength="500"
+            placeholder="Contoh: Pembayaran DP"
+          ></textarea>
+        </label>
+
+        <button class="button button-primary full-field" type="submit">
+          <i data-lucide="credit-card"></i>
+          Simpan pembayaran
+        </button>
+      </form>
+    </article>
+
+    <aside class="rental-note">
+      <span class="note-icon">
+        <i data-lucide="wallet"></i>
+      </span>
+      <h2>Informasi pembayaran</h2>
+      <p>
+        Pembayaran dapat dicatat secara bertahap, seperti uang muka
+        (DP) dan pelunasan.
+      </p>
+      <div class="note-rule"></div>
+      <div class="note-detail">
+        <i data-lucide="calculator"></i>
+        <span>
+          Sisa tagihan adalah total sewa dikurangi seluruh pembayaran
+          yang sudah dicatat.
+        </span>
+      </div>
+    </aside>
+  </div>
+
+  <article class="panel table-panel">
+    <div class="panel-heading">
+      <div>
+        <h2>Riwayat pembayaran</h2>
+        <p class="muted">Daftar pembayaran yang tersimpan di database.</p>
+      </div>
+    </div>
+
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>ID PEMBAYARAN</th>
+            <th>ID TRANSAKSI</th>
+            <th>PELANGGAN</th>
+            <th>KAMERA</th>
+            <th>TANGGAL</th>
+            <th>JUMLAH</th>
+            <th>METODE</th>
+          </tr>
+        </thead>
+        <tbody id="paymentsTable"></tbody>
+      </table>
+    </div>
+  </article>
+</section>
 
       <section class="page-view" id="page-pendapatan" data-title="Pendapatan">
         <div class="page-heading"><div><p class="eyebrow">LAPORAN KEUANGAN</p><h1>Pendapatan</h1><p class="page-subtitle">Tinjau nilai transaksi dan status pembayaran sewa.</p></div></div>
