@@ -2,6 +2,8 @@
 
 Dashboard pengelolaan sewa kamera berbasis HTML, CSS, JavaScript, dan Supabase PostgreSQL. Aplikasi berjalan di browser tanpa Node.js, Express, npm, atau framework frontend.
 
+Demo web: https://nadhiraalyzzah.github.io/LensaKita/
+
 ## Struktur aplikasi
 
 ```text
