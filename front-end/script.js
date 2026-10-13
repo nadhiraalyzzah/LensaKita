@@ -513,8 +513,14 @@ function populateRentalOptions() {
 
 function renderReturns() {
   const active = state.transaksi
-    .filter(item => item.status_sewa === "Aktif")
-    .sort((a, b) => a.tanggal_kembali.localeCompare(b.tanggal_kembali));
+    .filter(item =>
+     String(item.status_sewa || "").trim().toLowerCase() === "aktif"
+   )
+    .sort((a, b) =>
+      String(a.tanggal_kembali || "").localeCompare(
+        String(b.tanggal_kembali || "")
+      )
+    );
 
   document.getElementById("activeRentalCount").textContent =
     `${active.length} aktif`;
