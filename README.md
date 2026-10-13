@@ -1,11 +1,34 @@
 # LensaKita
 
-Dashboard pengelolaan sewa kamera berbasis HTML, CSS, JavaScript, dan Supabase PostgreSQL. Aplikasi berjalan di browser tanpa Node.js, Express, npm, atau framework frontend.
+LensaKita adalah aplikasi web sederhana untuk membantu pengelolaan penyewaan kamera dalam satu tempat. Mulai dari mendata kamera dan pelanggan, mencatat transaksi sewa, mengelola pengembalian, hingga memantau pendapatan, semuanya bisa dilakukan melalui satu dashboard. LensaKita dibuat untuk mempermudah proses administrasi bisnis rental kamera agar lebih terorganisir dan praktis. Dengan tampilan dashboard yang mudah dipahami, pengguna dapat memantau ketersediaan kamera, mengelola data pelanggan, dan melihat ringkasan transaksi tanpa harus mencatat semuanya secara manual.
 
 Demo web: https://nadhiraalyzzah.github.io/LensaKita/
 
-## Struktur aplikasi
+## Fitur Utama
+📊 Dashboard — Melihat ringkasan jumlah kamera, pelanggan, transaksi, dan pendapatan.
 
+📷 Manajemen Kamera — Menambahkan, mengubah, menghapus, dan memantau status kamera.
+
+👥 Manajemen Pelanggan — Menyimpan dan mengelola informasi pelanggan.
+
+📝 Transaksi Penyewaan — Mencatat penyewaan kamera dengan perhitungan otomatis durasi dan total biaya.
+
+🔄 Pengembalian Kamera — Mengelola pengembalian dan memperbarui status ketersediaan kamera.
+
+💰 Ringkasan Pendapatan — Memantau pendapatan berdasarkan data transaksi yang tercatat.
+
+
+## Teknologi yang Digunakan
+
+HTML — Struktur halaman aplikasi.
+
+CSS — Tampilan dan desain antarmuka.
+
+JavaScript — Logika aplikasi dan interaksi pengguna.
+
+Supabase & PostgreSQL — Penyimpanan dan pengelolaan data.
+
+## Struktur Proyek Aplikasi
 ```text
 index.html
 style.css
@@ -15,26 +38,8 @@ SUPABASE/
 	database.sql
 ```
 
-## Menjalankan
+## Tujuan Proyek
+Proyek ini dikembangkan sebagai implementasi pembelajaran pengembangan aplikasi web, pengelolaan basis data, dan digitalisasi proses bisnis sederhana. LensaKita menggabungkan antarmuka web dengan pengelolaan data untuk mendukung aktivitas operasional rental kamera.
 
-1. Buka folder proyek ini di VS Code.
-2. Klik kanan `index.html`, lalu pilih **Open with Live Server**. Alternatifnya, buka `index.html` langsung di browser untuk mencoba mode demo.
-3. Tanpa konfigurasi Supabase, aplikasi memakai data contoh di browser dan menyimpannya di `localStorage`.
+LensaKita — Manage your rentals, capture every moment. 📸
 
-## Menghubungkan Supabase
-
-1. Buat project Supabase, lalu buka **SQL Editor**.
-2. Jalankan seluruh isi `SUPABASE/database.sql` satu kali untuk membuat tabel, relasi, constraint, dan data contoh.
-3. Buka **Project Settings > API**. Salin Project URL dan publishable/anon key.
-4. Ganti nilai `SUPABASE_URL` dan `SUPABASE_ANON_KEY` di `SUPABASE/app.js`. Jangan pernah menaruh `service_role` key di aplikasi browser.
-5. Muat ulang aplikasi melalui Live Server. Indikator koneksi menampilkan status Supabase.
-
-Pastikan kebijakan akses Supabase (RLS dan policies) sesuai kebutuhan sebelum memakai data nyata. Aplikasi ini tidak menyediakan login atau pembatasan peran.
-
-## Fitur
-
-- Dashboard statistik, transaksi terbaru, kamera yang disewa, dan grafik pendapatan.
-- CRUD kamera serta CRUD pelanggan dengan pencarian dan filter.
-- Transaksi sewa dengan hitung otomatis durasi dan total tarif.
-- Pengembalian kamera yang memperbarui status transaksi dan inventaris.
-- Ringkasan pendapatan dengan filter status.
