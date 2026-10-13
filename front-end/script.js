@@ -920,7 +920,7 @@ function openRecordDialog(type, record = null) {
       </label>
       <label class="dialog-field">Harga sewa per hari
         <input name="harga_sewa_per_hari" type="number" min="1"
-          step="1000" required
+          step="1" required
           value="${escapeHTML(record?.harga_sewa_per_hari || "")}"
           placeholder="500000">
       </label>
