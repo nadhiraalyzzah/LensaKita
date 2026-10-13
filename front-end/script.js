@@ -924,12 +924,31 @@ function openRecordDialog(type, record = null) {
           value="${escapeHTML(record?.harga_sewa_per_hari || "")}"
           placeholder="500000">
       </label>
-      <label class="dialog-field">Status
-        <select name="status">
-          <option ${record?.status !== "Disewa" ? "selected" : ""}>Tersedia</option>
-          <option ${record?.status === "Disewa" ? "selected" : ""}>Disewa</option>
-        </select>
-      </label>
+      
+<label class="dialog-field">Status
+  <select name="status" ${record && state.transaksi.some(
+    item =>
+      Number(item.id_kamera) === Number(record.id_kamera) &&
+      item.status_sewa === "Aktif"
+  ) ? "disabled" : ""}>
+    <option value="Tersedia" ${
+      record?.status !== "Disewa" ? "selected" : ""
+    }>Tersedia</option>
+    <option value="Disewa" ${
+      record?.status === "Disewa" ? "selected" : ""
+    }>Disewa</option>
+  </select>
+  ${
+    record && state.transaksi.some(
+      item =>
+        Number(item.id_kamera) === Number(record.id_kamera) &&
+        item.status_sewa === "Aktif"
+    )
+      ? '<small class="cell-subtle">Kamera masih dipinjam. Status akan tersedia setelah pengembalian dikonfirmasi.</small>'
+      : ""
+  }
+</label>
+
     `
     : `
       <label class="dialog-field">Nama pelanggan
