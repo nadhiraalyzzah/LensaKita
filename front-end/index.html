@@ -83,8 +83,12 @@
         <div class="rental-layout"><article class="panel form-panel"><div class="panel-heading"><div><h2>Detail penyewaan</h2><p class="muted">Lengkapi informasi kamera dan periode sewa.</p></div><span class="step-indicator">01 <span>/ 01</span></span></div><form id="rentalForm" class="form-grid">
           <label class="field full-field">Pelanggan<select id="rentalCustomer" required><option value="">Pilih pelanggan</option></select></label>
           <label class="field full-field">Kamera<select id="rentalCamera" required><option value="">Pilih kamera tersedia</option></select></label>
-          <label class="field">Tanggal sewa<input id="rentalStart" type="date" required></label>
-          <label class="field">Tanggal kembali<input id="rentalEnd" type="date" required></label>
+          <label class="field">Tanggal dan jam sewa
+            <input id="rentalStart" type="datetime-local" required>
+              </label>
+          <label class="field">Tanggal dan jam kembali
+            <input id="rentalEnd" type="datetime-local" required>
+              </label>
           <div class="rental-summary full-field"><div><span>Lama sewa</span><strong id="rentalDays">0 hari</strong></div><div><span>Harga per hari</span><strong id="rentalRate">Rp0</strong></div><div class="summary-total"><span>Total pendapatan</span><strong id="rentalTotal">Rp0</strong></div></div>
           <button class="button button-primary full-field" type="submit"><i data-lucide="receipt-text"></i>Buat transaksi sewa</button>
         </form></article><aside class="rental-note"><span class="note-icon"><i data-lucide="badge-info"></i></span><h2>Informasi sewa</h2><p>Pastikan tanggal kembali setelah tanggal sewa. Harga dihitung otomatis berdasarkan lama sewa dan tarif harian kamera.</p><div class="note-rule"></div><div class="note-detail"><i data-lucide="shield-check"></i><span>Status kamera berubah menjadi <strong>Disewa</strong> setelah transaksi berhasil.</span></div></aside></div>
