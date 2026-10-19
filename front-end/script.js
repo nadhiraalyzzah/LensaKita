@@ -32,12 +32,71 @@ function shiftDate(date, days) {
   return `${result.getFullYear()}-${String(result.getMonth() + 1).padStart(2, "0")}-${String(result.getDate()).padStart(2, "0")}`;
 }
 
+const DENDA_PER_HARI = 50000;
+const MILIDETIK_PER_HARI = 24 * 60 * 60 * 1000;
+
+// Menghitung lama sewa berdasarkan tanggal dan jam.
+// Durasi sebagian hari dibulatkan ke atas untuk tagihan sewa.
 function dateDiff(start, end) {
   if (!start || !end) return 0;
-  return Math.round(
-    (Date.parse(`${end}T00:00:00Z`) -
-      Date.parse(`${start}T00:00:00Z`)) / 86400000
+
+  const startTime = new Date(start).getTime();
+  const endTime = new Date(end).getTime();
+
+  if (
+    !Number.isFinite(startTime) ||
+    !Number.isFinite(endTime) ||
+    endTime <= startTime
+  ) {
+    return 0;
+  }
+
+  return Math.ceil(
+    (endTime - startTime) / MILIDETIK_PER_HARI
   );
+}
+
+// Membaca batas pengembalian berupa tanggal dan jam.
+function parseDeadline(value) {
+  if (!value) return null;
+
+  const date = new Date(value);
+
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+// Menghitung denda setiap 24 jam keterlambatan penuh.
+function calculateFine(deadlineValue, returnTime = new Date()) {
+  const deadline = parseDeadline(deadlineValue);
+
+  if (!deadline || returnTime <= deadline) {
+    return { lateDays: 0, fine: 0 };
+  }
+
+  const lateDays = Math.floor(
+    (returnTime.getTime() - deadline.getTime()) /
+      MILIDETIK_PER_HARI
+  );
+
+  return {
+    lateDays,
+    fine: lateDays * DENDA_PER_HARI
+  };
+}
+
+// Menampilkan tanggal beserta jam.
+function displayDateTime(value) {
+  const date = parseDeadline(value);
+
+  if (!date) return "-";
+
+  return date.toLocaleString("id-ID", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit"
+  });
 }
 
 function money(value) {
