@@ -1,4 +1,3 @@
-
 const state = {
   kamera: [],
   pelanggan: [],
@@ -21,22 +20,40 @@ const monthLabels = [
 const dialog = document.getElementById("appDialog");
 let dialogContext = null;
 
+const DENDA_PER_HARI = 50000;
+const MILIDETIK_PER_HARI = 24 * 60 * 60 * 1000;
+
 function todayISO() {
   const now = new Date();
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
 
+function dateTimeLocalValue(date = new Date()) {
+  const localDate = new Date(
+    date.getTime() - date.getTimezoneOffset() * 60000
+  );
+  return localDate.toISOString().slice(0, 16);
+}
+
+function addDaysToDateTimeLocal(value, days) {
+  const date = value ? new Date(value) : new Date();
+
+  if (Number.isNaN(date.getTime())) {
+    return dateTimeLocalValue(new Date());
+  }
+
+  date.setDate(date.getDate() + days);
+  return dateTimeLocalValue(date);
+}
+
 function shiftDate(date, days) {
   const result = new Date(`${date}T00:00:00`);
   result.setDate(result.getDate() + days);
+
   return `${result.getFullYear()}-${String(result.getMonth() + 1).padStart(2, "0")}-${String(result.getDate()).padStart(2, "0")}`;
 }
 
-const DENDA_PER_HARI = 50000;
-const MILIDETIK_PER_HARI = 24 * 60 * 60 * 1000;
-
-// Menghitung lama sewa berdasarkan tanggal dan jam.
-// Durasi sebagian hari dibulatkan ke atas untuk tagihan sewa.
+// Durasi sewa dibulatkan ke atas per hari untuk menghitung harga sewa.
 function dateDiff(start, end) {
   if (!start || !end) return 0;
 
@@ -56,16 +73,22 @@ function dateDiff(start, end) {
   );
 }
 
-// Membaca batas pengembalian berupa tanggal dan jam.
+// Mendukung data lama yang hanya menyimpan tanggal YYYY-MM-DD.
 function parseDeadline(value) {
   if (!value) return null;
 
-  const date = new Date(value);
+  const normalized = String(value).trim();
+
+  const date = new Date(
+    /^\d{4}-\d{2}-\d{2}$/.test(normalized)
+      ? `${normalized}T00:00:00`
+      : normalized
+  );
 
   return Number.isNaN(date.getTime()) ? null : date;
 }
 
-// Menghitung denda setiap 24 jam keterlambatan penuh.
+// Denda dikenakan setiap 24 jam penuh setelah batas pengembalian.
 function calculateFine(deadlineValue, returnTime = new Date()) {
   const deadline = parseDeadline(deadlineValue);
 
@@ -84,7 +107,6 @@ function calculateFine(deadlineValue, returnTime = new Date()) {
   };
 }
 
-// Menampilkan tanggal beserta jam.
 function displayDateTime(value) {
   const date = parseDeadline(value);
 
@@ -104,8 +126,11 @@ function money(value) {
 }
 
 function displayDate(value) {
-  if (!value) return "-";
-  return new Date(`${value}T00:00:00`).toLocaleDateString("id-ID", {
+  const date = parseDeadline(value);
+
+  if (!date) return "-";
+
+  return date.toLocaleDateString("id-ID", {
     day: "2-digit",
     month: "short",
     year: "numeric"
@@ -142,9 +167,9 @@ function makeDemoData() {
     ],
 
     transaksi: [
-      { id_transaksi: 1, id_kamera: 1, id_pelanggan: 1, tanggal_sewa: shiftDate(now, -20), tanggal_kembali: shiftDate(now, -18), lama_sewa: 2, harga_per_hari: 450000, total_pendapatan: 900000, status_sewa: "Selesai" },
-      { id_transaksi: 2, id_kamera: 2, id_pelanggan: 2, tanggal_sewa: shiftDate(now, -14), tanggal_kembali: shiftDate(now, -11), lama_sewa: 3, harga_per_hari: 500000, total_pendapatan: 1500000, status_sewa: "Selesai" },
-      { id_transaksi: 3, id_kamera: 3, id_pelanggan: 3, tanggal_sewa: shiftDate(now, -1), tanggal_kembali: shiftDate(now, 2), lama_sewa: 3, harga_per_hari: 300000, total_pendapatan: 900000, status_sewa: "Aktif" }
+      { id_transaksi: 1, id_kamera: 1, id_pelanggan: 1, tanggal_sewa: shiftDate(now, -20), tanggal_kembali: shiftDate(now, -18), lama_sewa: 2, harga_per_hari: 450000, total_pendapatan: 900000, denda: 0, status_sewa: "Selesai" },
+      { id_transaksi: 2, id_kamera: 2, id_pelanggan: 2, tanggal_sewa: shiftDate(now, -14), tanggal_kembali: shiftDate(now, -11), lama_sewa: 3, harga_per_hari: 500000, total_pendapatan: 1500000, denda: 0, status_sewa: "Selesai" },
+      { id_transaksi: 3, id_kamera: 3, id_pelanggan: 3, tanggal_sewa: shiftDate(now, -1), tanggal_kembali: shiftDate(now, 2), lama_sewa: 3, harga_per_hari: 300000, total_pendapatan: 900000, denda: 0, status_sewa: "Aktif" }
     ],
 
     pembayaran: []
@@ -177,6 +202,14 @@ function loadDemoData() {
     if (!Array.isArray(state.pembayaran)) {
       state.pembayaran = [];
     }
+
+    if (!Array.isArray(state.transaksi)) {
+      state.transaksi = [];
+    }
+
+    state.transaksi.forEach(item => {
+      if (item.denda == null) item.denda = 0;
+    });
   } catch (error) {
     console.warn("Data demo tidak dapat dibaca:", error);
     Object.assign(state, makeDemoData());
@@ -187,6 +220,7 @@ function loadDemoData() {
 
 function persistDemoData() {
   if (window.SUPABASE_CONFIGURED) return;
+
   localStorage.setItem(demoStorageKey, JSON.stringify(state));
 }
 
@@ -224,7 +258,10 @@ async function fetchData() {
       ]);
 
     const failed = [
-      cameras, customers, transactions, payments
+      cameras,
+      customers,
+      transactions,
+      payments
     ].find(result => result.error);
 
     if (failed) throw failed.error;
@@ -233,6 +270,10 @@ async function fetchData() {
     state.pelanggan = customers.data || [];
     state.transaksi = transactions.data || [];
     state.pembayaran = payments.data || [];
+
+    state.transaksi.forEach(item => {
+      if (item.denda == null) item.denda = 0;
+    });
 
     setConnection("online", "Supabase terhubung");
     renderAll();
@@ -246,6 +287,7 @@ async function fetchData() {
 async function saveRecord(table, key, id, values) {
   if (window.SUPABASE_CONFIGURED) {
     const query = window.supabaseClient.from(table);
+
     const result = id
       ? await query.update(values).eq(key, id)
       : await query.insert(values);
@@ -262,7 +304,10 @@ async function saveRecord(table, key, id, values) {
       );
 
       if (index !== -1) {
-        collection[index] = { ...collection[index], ...values };
+        collection[index] = {
+          ...collection[index],
+          ...values
+        };
       }
     } else {
       const nextId = Math.max(
@@ -301,7 +346,10 @@ async function deleteRecord(table, key, id) {
       );
     }
 
-    const collection = isCamera ? state.kamera : state.pelanggan;
+    const collection = isCamera
+      ? state.kamera
+      : state.pelanggan;
+
     const index = collection.findIndex(
       item => Number(item[key]) === Number(id)
     );
@@ -369,14 +417,15 @@ function renderDashboard() {
     `).join("");
 
   const year = new Date().getFullYear();
+
   document.getElementById("chartYear").textContent = String(year);
 
   const totals = Array(12).fill(0);
 
   completed.forEach(item => {
-    const date = new Date(`${item.tanggal_kembali}T00:00:00`);
+    const date = parseDeadline(item.tanggal_kembali);
 
-    if (date.getFullYear() === year) {
+    if (date && date.getFullYear() === year) {
       totals[date.getMonth()] += Number(item.total_pendapatan || 0);
     }
   });
@@ -573,8 +622,8 @@ function populateRentalOptions() {
 function renderReturns() {
   const active = state.transaksi
     .filter(item =>
-     String(item.status_sewa || "").trim().toLowerCase() === "aktif"
-   )
+      String(item.status_sewa || "").trim().toLowerCase() === "aktif"
+    )
     .sort((a, b) =>
       String(a.tanggal_kembali || "").localeCompare(
         String(b.tanggal_kembali || "")
@@ -589,19 +638,26 @@ function renderReturns() {
       ? active.map(item => {
           const camera = getCamera(item.id_kamera);
           const customer = getCustomer(item.id_pelanggan);
-          const overdue = item.tanggal_kembali < todayISO();
+
+          const { lateDays, fine } = calculateFine(
+            item.tanggal_kembali,
+            new Date()
+          );
 
           return `
             <tr>
               <td class="cell-primary">${escapeHTML(customer?.nama_pelanggan || "Pelanggan")}</td>
               <td>${escapeHTML(camera?.nama_kamera || "Kamera")}</td>
-              <td>${displayDate(item.tanggal_sewa)}</td>
+              <td>${displayDateTime(item.tanggal_sewa)}</td>
               <td>
-                ${displayDate(item.tanggal_kembali)}
-                ${overdue ? `<span class="cell-subtle" style="color:var(--red)">Terlambat</span>` : ""}
+                ${displayDateTime(item.tanggal_kembali)}
+                ${lateDays > 0
+                  ? `<span class="cell-subtle" style="color:var(--red)">Terlambat ${lateDays} hari penuh</span>`
+                  : ""}
               </td>
               <td>${item.lama_sewa} hari</td>
               <td class="cell-primary">${money(item.total_pendapatan)}</td>
+              <td class="cell-primary" style="color:var(--red)">${money(fine)}</td>
               <td>
                 <button class="button button-primary" data-action="return-camera" data-id="${item.id_transaksi}" style="min-height:32px;padding:0 10px;font-size:10px">
                   <i data-lucide="package-check"></i>Kembalikan
@@ -610,7 +666,7 @@ function renderReturns() {
             </tr>
           `;
         }).join("")
-      : emptyRow(7, "Tidak ada kamera yang menunggu pengembalian.");
+      : emptyRow(8, "Tidak ada kamera yang menunggu pengembalian.");
 }
 
 function renderIncome() {
@@ -654,8 +710,8 @@ function renderIncome() {
               <td class="cell-primary">${escapeHTML(customer?.nama_pelanggan || "Pelanggan")}</td>
               <td>${escapeHTML(camera?.nama_kamera || "Kamera")}</td>
               <td>
-                ${displayDate(item.tanggal_sewa)}
-                <span class="cell-subtle">hingga ${displayDate(item.tanggal_kembali)}</span>
+                ${displayDateTime(item.tanggal_sewa)}
+                <span class="cell-subtle">hingga ${displayDateTime(item.tanggal_kembali)}</span>
               </td>
               <td>${item.lama_sewa} hari</td>
               <td class="cell-primary">${money(item.total_pendapatan)}</td>
@@ -893,6 +949,7 @@ function renderAll() {
 function updateRentalSummary() {
   const start = document.getElementById("rentalStart").value;
   const end = document.getElementById("rentalEnd").value;
+
   const camera = getCamera(
     document.getElementById("rentalCamera").value
   );
@@ -989,31 +1046,29 @@ function openRecordDialog(type, record = null) {
           value="${escapeHTML(record?.harga_sewa_per_hari || "")}"
           placeholder="500000">
       </label>
-      
-<label class="dialog-field">Status
-  <select name="status" ${record && state.transaksi.some(
-    item =>
-      Number(item.id_kamera) === Number(record.id_kamera) &&
-      item.status_sewa === "Aktif"
-  ) ? "disabled" : ""}>
-    <option value="Tersedia" ${
-      record?.status !== "Disewa" ? "selected" : ""
-    }>Tersedia</option>
-    <option value="Disewa" ${
-      record?.status === "Disewa" ? "selected" : ""
-    }>Disewa</option>
-  </select>
-  ${
-    record && state.transaksi.some(
-      item =>
-        Number(item.id_kamera) === Number(record.id_kamera) &&
-        item.status_sewa === "Aktif"
-    )
-      ? '<small class="cell-subtle">Kamera masih dipinjam. Status akan tersedia setelah pengembalian dikonfirmasi.</small>'
-      : ""
-  }
-</label>
-
+      <label class="dialog-field">Status
+        <select name="status" ${record && state.transaksi.some(
+          item =>
+            Number(item.id_kamera) === Number(record.id_kamera) &&
+            item.status_sewa === "Aktif"
+        ) ? "disabled" : ""}>
+          <option value="Tersedia" ${
+            record?.status !== "Disewa" ? "selected" : ""
+          }>Tersedia</option>
+          <option value="Disewa" ${
+            record?.status === "Disewa" ? "selected" : ""
+          }>Disewa</option>
+        </select>
+        ${
+          record && state.transaksi.some(
+            item =>
+              Number(item.id_kamera) === Number(record.id_kamera) &&
+              item.status_sewa === "Aktif"
+          )
+            ? '<small class="cell-subtle">Kamera masih dipinjam. Status akan tersedia setelah pengembalian dikonfirmasi.</small>'
+            : ""
+        }
+      </label>
     `
     : `
       <label class="dialog-field">Nama pelanggan
@@ -1057,6 +1112,7 @@ async function submitRecord(event) {
   if (!dialogContext) return;
 
   const { type, id } = dialogContext;
+
   const values = Object.fromEntries(
     new FormData(event.currentTarget).entries()
   );
@@ -1129,7 +1185,7 @@ async function createRental(event) {
   }
 
   if (days < 1) {
-    return toast("Tanggal kembali harus setelah tanggal sewa.", true);
+    return toast("Tanggal dan jam kembali harus setelah tanggal dan jam sewa.", true);
   }
 
   const transaction = {
@@ -1140,6 +1196,7 @@ async function createRental(event) {
     lama_sewa: days,
     harga_per_hari: Number(camera.harga_sewa_per_hari),
     total_pendapatan: days * Number(camera.harga_sewa_per_hari),
+    denda: 0,
     status_sewa: "Aktif"
   };
 
@@ -1174,9 +1231,12 @@ async function createRental(event) {
 
     event.currentTarget.reset();
 
-    document.getElementById("rentalStart").value = todayISO();
-    document.getElementById("rentalEnd").value =
-      shiftDate(todayISO(), 1);
+    const startDefault = dateTimeLocalValue(new Date());
+    const endDefault = addDaysToDateTimeLocal(startDefault, 1);
+
+    document.getElementById("rentalStart").value = startDefault;
+    document.getElementById("rentalEnd").value = endDefault;
+    document.getElementById("rentalEnd").min = endDefault;
 
     updateRentalSummary();
 
@@ -1195,15 +1255,37 @@ async function returnCamera(id) {
 
   if (!transaction || transaction.status_sewa !== "Aktif") return;
 
-  if (!window.confirm("Konfirmasi kamera sudah diterima kembali?")) {
-    return;
-  }
+  const { lateDays, fine } = calculateFine(
+    transaction.tanggal_kembali,
+    new Date()
+  );
+
+  const currentTotal = Number(transaction.total_pendapatan) || 0;
+  const existingFine = Number(transaction.denda) || 0;
+
+  // Hindari menghitung denda lama dua kali.
+  const rentalBase = Math.max(0, currentTotal - existingFine);
+  const finalTotal = rentalBase + fine;
+
+  const confirmation = window.confirm(
+    `Konfirmasi kamera sudah diterima kembali?\n\n` +
+    `Total sewa: ${money(rentalBase)}\n` +
+    `Terlambat: ${lateDays} hari penuh\n` +
+    `Denda: ${money(fine)}\n` +
+    `Total tagihan akhir: ${money(finalTotal)}`
+  );
+
+  if (!confirmation) return;
 
   try {
     if (window.SUPABASE_CONFIGURED) {
       const returned = await window.supabaseClient
         .from("TRANSAKSI_SEWA")
-        .update({ status_sewa: "Selesai" })
+        .update({
+          status_sewa: "Selesai",
+          denda: fine,
+          total_pendapatan: finalTotal
+        })
         .eq("id_transaksi", id)
         .eq("status_sewa", "Aktif");
 
@@ -1217,6 +1299,8 @@ async function returnCamera(id) {
       if (cameraUpdated.error) throw cameraUpdated.error;
     } else {
       transaction.status_sewa = "Selesai";
+      transaction.denda = fine;
+      transaction.total_pendapatan = finalTotal;
 
       const camera = getCamera(transaction.id_kamera);
       if (camera) camera.status = "Tersedia";
@@ -1226,7 +1310,11 @@ async function returnCamera(id) {
 
     await fetchData();
 
-    toast("Kamera berhasil dikembalikan.");
+    toast(
+      fine > 0
+        ? `Kamera dikembalikan. Denda ${money(fine)} sudah ditambahkan ke tagihan.`
+        : "Kamera berhasil dikembalikan tanpa denda."
+    );
   } catch (error) {
     toast(`Pengembalian gagal diproses: ${error.message}`, true);
   }
@@ -1318,20 +1406,24 @@ function initialize() {
 
   document.getElementById("rentalCamera")
     .addEventListener("change", updateRentalSummary);
-  
-document.getElementById("rentalStart")
-  .addEventListener("change", () => {
-    const start = document.getElementById("rentalStart").value;
-    const endInput = document.getElementById("rentalEnd");
 
-    endInput.min = start ? shiftDate(start, 1) : "";
+  document.getElementById("rentalStart")
+    .addEventListener("change", () => {
+      const start = document.getElementById("rentalStart").value;
+      const endInput = document.getElementById("rentalEnd");
 
-    if (start && endInput.value && endInput.value <= start) {
-      endInput.value = shiftDate(start, 1);
-    }
+      const minimumEnd = start
+        ? addDaysToDateTimeLocal(start, 1)
+        : "";
 
-    updateRentalSummary();
-  });
+      endInput.min = minimumEnd;
+
+      if (start && endInput.value && endInput.value <= start) {
+        endInput.value = minimumEnd;
+      }
+
+      updateRentalSummary();
+    });
 
   document.getElementById("rentalEnd")
     .addEventListener("change", updateRentalSummary);
@@ -1365,14 +1457,14 @@ document.getElementById("rentalStart")
   document.getElementById("returnsTable")
     .addEventListener("click", handleTableAction);
 
-  document.getElementById("rentalStart").min = todayISO();
-  document.getElementById("rentalStart").value = todayISO();
+  const startDefault = dateTimeLocalValue(new Date());
+  const endDefault = addDaysToDateTimeLocal(startDefault, 1);
 
-  document.getElementById("rentalEnd").min =
-    shiftDate(todayISO(), 1);
+  document.getElementById("rentalStart").min = startDefault;
+  document.getElementById("rentalStart").value = startDefault;
 
-  document.getElementById("rentalEnd").value =
-    shiftDate(todayISO(), 1);
+  document.getElementById("rentalEnd").min = endDefault;
+  document.getElementById("rentalEnd").value = endDefault;
 
   const initialPage = location.hash.slice(1);
 
