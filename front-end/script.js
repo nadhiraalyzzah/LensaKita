@@ -1318,20 +1318,20 @@ function initialize() {
 
   document.getElementById("rentalCamera")
     .addEventListener("change", updateRentalSummary);
+  
+document.getElementById("rentalStart")
+  .addEventListener("change", () => {
+    const start = document.getElementById("rentalStart").value;
+    const endInput = document.getElementById("rentalEnd");
 
-  document.getElementById("rentalStart")
-    .addEventListener("change", () => {
-      const start = document.getElementById("rentalStart").value;
-      const endInput = document.getElementById("rentalEnd");
+    endInput.min = start ? shiftDate(start, 1) : "";
 
-      endInput.min = start ? shiftDate(start, 1) : "";
+    if (start && endInput.value && endInput.value <= start) {
+      endInput.value = shiftDate(start, 1);
+    }
 
-      if (start && endInput.value && endInput.value <= start) {
-        endInput.value = shiftDate(start, 1);
-      }
-
-      updateRentalSummary();
-    });
+    updateRentalSummary();
+  });
 
   document.getElementById("rentalEnd")
     .addEventListener("change", updateRentalSummary);
