@@ -107,17 +107,38 @@ function calculateFine(deadlineValue, returnTime = new Date()) {
   };
 }
 
-function displayDateTime(value) {
-  const date = parseDeadline(value);
 
-  if (!date) return "-";
+function displayDateTime(value) {
+  if (!value || value === "null" || value === "undefined") {
+    return "-";
+  }
+
+  let dateString = String(value).trim();
+
+  // Menangani format tanggal dari database: YYYY-MM-DD HH:mm:ss
+  if (/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}/.test(dateString)) {
+    dateString = dateString.replace(" ", "T");
+  }
+
+  // Menangani format tanggal DD/MM/YYYY
+  if (/^\d{2}\/\d{2}\/\d{4}$/.test(dateString)) {
+    const [day, month, year] = dateString.split("/");
+    dateString = `${year}-${month}-${day}T00:00:00`;
+  }
+
+  const date = new Date(dateString);
+
+  if (Number.isNaN(date.getTime())) {
+    return "-";
+  }
 
   return date.toLocaleString("id-ID", {
     day: "2-digit",
-    month: "short",
+    month: "2-digit",
     year: "numeric",
     hour: "2-digit",
-    minute: "2-digit"
+    minute: "2-digit",
+    hour12: false
   });
 }
 
